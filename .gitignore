@@ -1,0 +1,4 @@
+test_data
+*.swp
+bin/*
+!bin/.gitkeep
