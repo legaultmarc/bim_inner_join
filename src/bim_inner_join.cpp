@@ -1,3 +1,4 @@
+#include <unordered_set>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -35,9 +36,27 @@ struct Variant {
 
     bool alleles_eq(const Variant& that) const {
         bool locus_match = *this==that;
-        return locus_match &&
-               (((a1 == that.a1) && (a2 == that.a2)) ||
-                ((a1 == that.a2) && (a2 == that.a1)));
+
+        // Allele comparison is made a bit harder because sometimes there are
+        // "0" in bim files if the variant is monomorphic.
+        // This means that A/0 and G/A should match.
+        // On the other hand, something like A/0 and T/G should not.
+        // One way of testing this would be to check that the number of unique
+        // non-"0" alleles is <= 2.
+
+        std::unordered_set<std::string> alleles;
+        if (a1 != "0")
+            alleles.insert(a1);
+        if (a2 != "0")
+            alleles.insert(a2);
+        if (that.a1 != "0")
+            alleles.insert(that.a1);
+        if (that.a2 != "0")
+            alleles.insert(that.a2);
+
+        bool alleles_match = alleles.size() <= 2;
+
+        return locus_match && alleles_match;
     };
 };
 
