@@ -222,6 +222,7 @@ void write_bim_line(const Variant &v, std::ofstream &file) {
 
 // Check if all the variants in the list are equals.
 bool check_match(const Variant* li, int n, Log &log) {
+    bool wrote_bim_line = false;
     bool all_match = true;
 
     const Variant first = li[0];
@@ -231,12 +232,21 @@ bool check_match(const Variant* li, int n, Log &log) {
     }
 
     if (all_match) {
-        write_bim_line(first, log.matches_bim);
-
-        // Write the names to the appropriate lists.
+        // Write the names to the appropriate lists and to the "matches" bim
+        // file.
         for (int i = 0; i < n; i++) {
             log.names_lists[i] << li[i].name << std::endl;
+
+            // Find a bim line with no "0" allele to write, otherwise
+            // write the first one.
+            if (!wrote_bim_line && li[i].a1 != "0" && li[i].a2 != "0") {
+                write_bim_line(li[i], log.matches_bim);
+                wrote_bim_line = true;
+            }
         }
+
+        if (!wrote_bim_line)
+            write_bim_line(li[0], log.matches_bim);
     }
     else {
         // TODO I am not sure how to log the mismatches...
