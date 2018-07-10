@@ -258,6 +258,19 @@ bool check_match(const Variant* li, int n, Log &log) {
 }
 
 
+bool all_same_locus(const Variant* li, int n) {
+    const Variant first = li[0];
+
+    for (int i = 1; i < n; i++) {
+        // The equality between variants checks locus matches.
+        if (first != li[i])
+            return false;
+    }
+
+    return true;
+}
+
+
 int main(int argc, char* argv[]) {
     int n_files = argc - 1;
     std::ifstream files[n_files];
@@ -291,15 +304,23 @@ int main(int argc, char* argv[]) {
 
     while (!any_eof(files, n_files)) {
         if (!check_match(cur, n_files, log)) {
-            // Find the furthest variant.
-            const Variant *max_variant = max(cur, n_files);
-            // std::cout << "Maximum: " << *max_variant << std::endl;
+            // Check if all variants are at the same locus. If it is the case
+            // we won't advance to the next variant, instead we will step
+            // the variants.
+            if (all_same_locus(cur, n_files)) {
+                read_variants(files, cur, n_files);
+            }
+            else {
+                // Find the furthest variant.
+                const Variant *max_variant = max(cur, n_files);
+                // std::cout << "Maximum: " << *max_variant << std::endl;
 
-            // Step the others towards the maximum.
-            read_variants_until_max(files, cur, *max_variant, n_files);
+                // Step the others towards the maximum.
+                read_variants_until_max(files, cur, *max_variant, n_files);
 
-            // std::cout << "Now : ";
-            // print_variants(cur, n_files);
+                // std::cout << "Now : ";
+                // print_variants(cur, n_files);
+            }
         }
 
         else {
